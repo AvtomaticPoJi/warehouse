@@ -477,19 +477,19 @@ func printTransaction(DATA transactionData, i int) {
 	fmt.Printf("%4s ",DATA[i].item.id)
 	fmt.Printf("%-10s ",DATA[i].item.name)
 	fmt.Printf("%-10s ",DATA[i].item.category)
-	fmt.Printf("%8d %-5.2f ",DATA[i].item.stock,
-				DATA[i].item.cost)
+	fmt.Printf("%+3d ",DATA[i].item.stock)
+	fmt.Printf("%02d-",DATA[i].date.da)
+	fmt.Printf("%02d-",DATA[i].date.mo)
+	fmt.Printf("%04d ",DATA[i].date.ye)
+	fmt.Printf("%02d-",DATA[i].time.hh)
+	fmt.Printf("%02d-",DATA[i].time.mm)
+	fmt.Printf("%02d ",DATA[i].time.ss)
 	fmt.Print(DATA[i].transactionType)
-	fmt.Printf(" %2d-",DATA[i].date.da)
-	fmt.Printf("%2d-",DATA[i].date.mo)
-	fmt.Printf("%4d ",DATA[i].date.ye)
-	fmt.Printf("%2d-",DATA[i].time.hh)
-	fmt.Printf("%2d-",DATA[i].time.mm)
-	fmt.Printf("%2d\n",DATA[i].time.ss)
+	fmt.Println()
 }
 func printTransactionData(DATA transactionData, n int) {
-	fmt.Printf("%s | %-4s | %-20s | %-12s | %-8s | %-8s | %s |\n", "Trans.ID","ID", "Item Information","Stock",
-								"Trans.Type","Date", "Time")
+	fmt.Printf("%s | %-4s | %-20s | %-12s | %-8s | %-8s | %s |\n", "Trans.ID","ID", "Item Information", 
+									"Stock", "Date", "Time", "Trans.Type")
 	for i:=0;i<n;i++ {
 		printTransaction(DATA,i)
 	}
@@ -596,11 +596,11 @@ func seqSearchTransactionID(DATA *transactionData, n int, target string) int {
 func dateAdjust(da,mo,ye *int) {
 	if *da > 30 {
 		*mo += (*da-(*da%30))/30
-		*da =  *da%30
+		*da =  (*da%30)
 	}
 	if *mo > 12 {
 		*ye += (*mo-(*mo%12))/12
-		*mo =  *mo%12
+		*mo =  (*mo%12)
 	}
 }
 func timeAdjust(hh,mm,ss *int) {
