@@ -51,7 +51,7 @@ func takeInput(IDATA *itemData, n *int, TDATA *transactionData, nT *int) {
 	var arg1, arg2, arg3 string
 	var stop bool = false
 	for !stop {
-		fmt.Println("Type action to start (list, write, sort, replace, remove) :")
+		fmt.Println("Type action to start (list, write, sort, replace, remove, edit, help, find) :")
 		arg1, arg2, arg3 = "", "", ""
 		fmt.Scan(&arg1)
 		switch arg1 {
@@ -127,7 +127,7 @@ func takeInput(IDATA *itemData, n *int, TDATA *transactionData, nT *int) {
 			fmt.Scan(&arg2)
 			switch arg2{
 			case "item":
-				replaceItemData(IDATA,n)
+				replaceItem(IDATA,n)
 				fmt.Println("Data replaced!")
 				printItemData(*IDATA, *n)
 			case "transaction":
@@ -138,9 +138,15 @@ func takeInput(IDATA *itemData, n *int, TDATA *transactionData, nT *int) {
 		case "find" :
 			findItem(*IDATA,*n)
 		case "remove":
-			removeItemData(IDATA,n)
-			fmt.Println("Data removed!")
-			printItemData(*IDATA, *n)
+			fmt.Scan(&arg2)
+			switch arg2 {
+			case "item":
+				removeItemData(IDATA,n)
+				printItemData(*IDATA, *n)
+			case "transaction":
+				removeTransaction(IDATA,n,TDATA,nT)
+				printTransactionData(*TDATA,*nT)
+			}
 		case "list":
 			fmt.Scan(&arg2)
 			switch arg2 {
@@ -210,16 +216,19 @@ func printItem(DATA itemData, i int) {
 	fmt.Printf("%8d %-5.2f\n",DATA.items[i].stock,
 				DATA.items[i].cost)
 }
+func readItem(DATA *itemData, i int) {	
+	fmt.Scan(&DATA.items[i].name)
+	fmt.Scan(&DATA.items[i].category)
+	fmt.Scan(&DATA.items[i].stock)
+	fmt.Scan(&DATA.items[i].cost)
+}
 func readItemData(DATA *itemData, n *int) {
 	var stop bool = false
 	for !stop {
 		fmt.Scan(&DATA.items[*n].id)
 		if DATA.items[*n].id == "null" { stop = true }
 		if !stop {
-			fmt.Scan(&DATA.items[*n].name)
-			fmt.Scan(&DATA.items[*n].category)
-			fmt.Scan(&DATA.items[*n].stock)
-			fmt.Scan(&DATA.items[*n].cost)
+			readItem(DATA,*n)
 			*n++
 		}
 	}
@@ -236,15 +245,11 @@ func removeItemData(DATA *itemData, n *int) {
 		idx = seqSearchItemID(*DATA,*n,remTar)
 	}
 	if idx > -1 {
-		for i:=idx;i<*n;i++ {
-			DATA.items[i] = DATA.items[i+1]
-		}
-	} else {
-		fmt.Println("Item not found!")
-	}
-	*n--
+		for i:=idx;i<*n;i++ { DATA.items[i] = DATA.items[i+1] }
+		*n--
+	} else { fmt.Println("Item not found!") }
 }
-func replaceItemData(DATA *itemData, n *int) {
+func replaceItem(DATA *itemData, n *int) {
 	var tar string
 	var idx int
 	fmt.Println("Replace item by ID: ")
@@ -256,11 +261,7 @@ func replaceItemData(DATA *itemData, n *int) {
 	}
 	fmt.Println("Input new data: ")
 	fmt.Println("(ID, name, category, stock, cost.)")
-	fmt.Scan(&DATA.items[idx].id)
-	fmt.Scan(&DATA.items[idx].name)
-	fmt.Scan(&DATA.items[idx].category)
-	fmt.Scan(&DATA.items[idx].stock)
-	fmt.Scan(&DATA.items[idx].cost)
+	readItem(DATA,idx)
 }
 func findItem(DATA itemData, n int) {
 	var by, tar string = "",""
@@ -371,6 +372,23 @@ func replaceTransaction(SOURCE *itemData, sn int, DATA *transactionData, n int) 
 	}
 	adjustItemData(SOURCE,sn,DATA,n)
 }
+func removeTransaction(SOURCE *itemData, sn *int, DATA *transactionData,n *int) {
+	var target string
+	var tgtIdx, formerIdx int = -1,0
+	var stop bool = false
+	for !stop && tgtIdx == -1 {
+		fmt.Scan(&target)
+		tgtIdx = seqSearchTransactionID(DATA,*n,target)
+		if tgtIdx == -1 { fmt.Println("Transaction entry not found.") }
+	}
+	if tgtIdx != -1 {
+		formerIdx = seqSearchItemID(*SOURCE,*sn,DATA[tgtIdx].item.id)
+		SOURCE.items[formerIdx].stock += DATA[tgtIdx].item.stock * (-1)
+		for i:=0;i<*n;i++ { DATA[i] = DATA[i+1] }
+		fmt.Println("Data removed!")
+		*n--
+	} else { fmt.Println("Transaction entry not found!") }
+}
 func editTransaction(SOURCE *itemData, sn int, DATA *transactionData,n int) {
 	var choice, target string
 	var tgtIdx int = -1
@@ -470,8 +488,8 @@ func printTransaction(DATA transactionData, i int) {
 	fmt.Printf("%2d\n",DATA[i].time.ss)
 }
 func printTransactionData(DATA transactionData, n int) {
-	fmt.Printf("%s | %-4s | %-20s | %-12s | %-8s | %-8s | %s | %-8s | %-8s\n", "Trans.ID","ID", "Item Information", "Category","Stock",
-								"Cost", "Trans.Type","Date", "Time")
+	fmt.Printf("%s | %-4s | %-20s | %-12s | %-8s | %-8s | %s |\n", "Trans.ID","ID", "Item Information","Stock",
+								"Trans.Type","Date", "Time")
 	for i:=0;i<n;i++ {
 		printTransaction(DATA,i)
 	}
@@ -565,12 +583,6 @@ func binSearchItemName(DATA itemData, n int, target string) int {
 			return m
 		}
 		m = (l+r)/2
-	}
-	return -1
-}
-func seqSearchTransactionItem(DATA *transactionData, n int, target string) int {
-	for i:=0;i<n;i++ {
-		if target == DATA[i].item.name { return i }
 	}
 	return -1
 }
